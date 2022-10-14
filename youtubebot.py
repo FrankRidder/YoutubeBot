@@ -79,6 +79,7 @@ async def skip(ctx: commands.Context, *args):
     voice_client.stop()
 
 @bot.command(name='play', aliases=['p'])
+@bot.command(name='play', aliases=['p'])
 async def play(ctx: commands.Context, *args):
     voice_state = ctx.author.voice
     if not await sense_checks(ctx, voice_state=voice_state):
@@ -93,23 +94,28 @@ async def play(ctx: commands.Context, *args):
     # source address as 0.0.0.0 to force ipv4 because ipv6 breaks it for some reason
     # this is equivalent to --force-ipv4 (line 312 of https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/options.py)
     await ctx.send(f'looking for `{query}`...')
-    with yt_dlp.YoutubeDL({'format': 'worstaudio',
+    with yt_dlp.YoutubeDL({'format': 'bestaudio/best',
                            'source_address': '0.0.0.0',
                            'default_search': 'ytsearch',
                            'outtmpl': '%(id)s.%(ext)s',
                            'noplaylist': True,
                            'allow_playlist_files': False,
+                           'postprocessors': [{
+                                'key': 'FFmpegExtractAudio',
+                                'preferredcodec': 'mp3',
+                           }],
                            # 'progress_hooks': [lambda info, ctx=ctx: video_progress_hook(ctx, info)],
                            # 'match_filter': lambda info, incomplete, will_need_search=will_need_search, ctx=ctx: start_hook(ctx, info, incomplete, will_need_search),
                            'paths': {'home': f'./dl/{server_id}'}}) as ydl:
+                           
         info = ydl.extract_info(query, download=False)
         if 'entries' in info:
             info = info['entries'][0]
         # send link if it was a search, otherwise send title as sending link again would clutter chat with previews
         await ctx.send('downloading ' + (f'https://youtu.be/{info["id"]}' if will_need_search else f'`{info["title"]}`'))
         ydl.download([query])
-        
-        path = f'./dl/{server_id}/{info["id"]}.{info["ext"]}'
+
+        path = f'./dl/{server_id}/{info["id"]}.mp3'
         try: queues[server_id].append((path, info))
         except KeyError: # first in queue
             queues[server_id] = [(path, info)]
