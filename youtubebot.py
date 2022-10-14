@@ -79,7 +79,6 @@ async def skip(ctx: commands.Context, *args):
     voice_client.stop()
 
 @bot.command(name='play', aliases=['p'])
-@bot.command(name='play', aliases=['p'])
 async def play(ctx: commands.Context, *args):
     voice_state = ctx.author.voice
     if not await sense_checks(ctx, voice_state=voice_state):
